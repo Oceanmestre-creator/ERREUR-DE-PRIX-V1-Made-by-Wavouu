@@ -1,8 +1,8 @@
 # Alertes erreurs de prix → Discord
 
 Surveille les nouveaux deals Dealabs toutes les 10 minutes et t'envoie une alerte Discord pour :
-- la **tech** (téléphones, ordinateurs, cartes graphiques…) à **-70 % ou plus** ;
-- tout deal tech où quelqu'un parle d'**erreur de prix**.
+- **tous les deals à -70 % ou plus**, toutes catégories (la tech est mise en avant) ;
+- tout deal où quelqu'un parle d'**erreur de prix**.
 
 100 % gratuit : tourne sur GitHub Actions, rien à laisser allumé.
 
@@ -21,6 +21,7 @@ Surveille les nouveaux deals Dealabs toutes les 10 minutes et t'envoie une alert
 
 En haut de `alerte.py` :
 - `REDUCTION_MIN` : seuil de réduction (70 par défaut) ;
+- `TOUTES_CATEGORIES` : `False` pour revenir à la tech seule ;
 - `MOTS_TECH` : mots-clés à surveiller ;
 - `MOTS_ERREUR` : mots qui déclenchent une alerte même sans pourcentage.
 

@@ -1,7 +1,8 @@
 """
 Alertes erreurs de prix -> Discord
-Lit le flux RSS des nouveaux deals Dealabs, garde la tech à -70 % ou plus
-(ou les deals signalés comme erreur de prix) et envoie une alerte Discord.
+Lit le flux RSS des nouveaux deals Dealabs et envoie une alerte Discord pour
+tout deal à -70 % ou plus (ou signalé comme erreur de prix), toutes catégories.
+La tech (téléphones, PC, cartes graphiques...) est mise en avant.
 Aucune dépendance : Python 3.9+ standard.
 """
 import html
@@ -19,6 +20,9 @@ REDUCTION_MIN = 70  # en %
 FLUX = [
     "https://www.dealabs.com/rss/nouveaux",
 ]
+
+# Surveiller toutes les catégories (True) ou seulement la tech (False)
+TOUTES_CATEGORIES = True
 
 # Catégories Dealabs considérées comme "tech"
 CATEGORIES_TECH = {"high-tech", "informatique"}
@@ -117,14 +121,15 @@ def analyser(xml_bytes):
 
 
 def doit_alerter(deal):
-    if not est_tech(deal["categorie"], deal["titre"]):
+    tech = est_tech(deal["categorie"], deal["titre"])
+    if not tech and not TOUTES_CATEGORIES:
         return None
     prix = prix_en_float(deal["prix_txt"])
     texte = f'{deal["titre"]} {deal["description"]}'
     reduction = trouver_reduction(texte, prix)
     erreur = any(m in texte.lower() for m in MOTS_ERREUR)
     if (reduction is not None and reduction >= REDUCTION_MIN) or erreur:
-        return {"prix": prix, "reduction": reduction, "erreur": erreur}
+        return {"prix": prix, "reduction": reduction, "erreur": erreur, "tech": tech}
     return None
 
 
@@ -137,11 +142,17 @@ def envoyer_discord(webhook, deal, info):
     if deal["marchand"]:
         champs.append({"name": "Marchand", "value": deal["marchand"], "inline": True})
 
-    entete = "🚨 Erreur de prix probable" if info["erreur"] else "🔥 Grosse réduction tech"
+    if info["erreur"]:
+        entete = "🚨 Erreur de prix probable" + (" (tech)" if info["tech"] else "")
+    elif info["tech"]:
+        entete = "🔥 Grosse réduction tech"
+    else:
+        entete = f'💸 Super deal • {deal["categorie"] or "autre"}'
+
     embed = {
         "title": deal["titre"][:250],
         "url": deal["lien"],
-        "color": 0xE74C3C if info["erreur"] else 0xF39C12,
+        "color": 0xE74C3C if info["erreur"] else (0xF39C12 if info["tech"] else 0x2ECC71),
         "fields": champs,
         "footer": {"text": f'Dealabs • {deal["categorie"]}'},
     }
