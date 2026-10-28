@@ -161,7 +161,7 @@ def main():
     test = "--test" in sys.argv  # n'envoie rien, affiche seulement
 
     if not webhook and not test:
-        sys.exit("Secret DISCORD_WEBHOOK manquant.")
+        sys.exit("ERREUR : le secret DISCORD_WEBHOOK est vide ou introuvable. Ajoute-le dans Settings > Secrets and variables > Actions > onglet Secrets > Repository secrets.")
 
     premier_lancement = not FICHIER_VUS.exists()
     vus = [] if premier_lancement else json.loads(FICHIER_VUS.read_text())
