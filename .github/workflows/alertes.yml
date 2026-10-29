@@ -2,7 +2,7 @@ name: Alertes erreurs de prix
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # toutes les 10 min (GitHub peut décaler de quelques minutes)
+    - cron: "3-59/10 * * * *"   # toutes les 10 min, décalé des heures rondes (moins de passages sautés)
   workflow_dispatch:          # bouton "Run workflow" pour tester à la main
 
 permissions:
