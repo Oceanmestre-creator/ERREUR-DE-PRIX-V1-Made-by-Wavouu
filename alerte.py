@@ -12,6 +12,8 @@ import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 # ---------------------------------------------------------------- Réglages
@@ -42,6 +44,10 @@ MOTS_ERREUR = ["erreur de prix", "erreur", "bug de prix", "prix bug"]
 
 FICHIER_VUS = Path(__file__).parent / "deja_vus.json"
 MAX_VUS = 2000
+
+# Données lues par l'appli (dossier docs/, publié avec GitHub Pages)
+FICHIER_DEALS = Path(__file__).parent / "docs" / "deals.json"
+MAX_DEALS = 300
 # -------------------------------------------------------------------------
 
 NS = {"pepper": "http://www.pepper.com/rss", "media": "http://search.yahoo.com/mrss/"}
@@ -103,6 +109,13 @@ def lire_flux(url):
         return r.read()
 
 
+def date_iso(texte):
+    try:
+        return parsedate_to_datetime(texte).astimezone(timezone.utc).isoformat()
+    except Exception:
+        return datetime.now(timezone.utc).isoformat()
+
+
 def analyser(xml_bytes):
     racine = ET.fromstring(xml_bytes)
     for item in racine.iter("item"):
@@ -117,20 +130,60 @@ def analyser(xml_bytes):
             "prix_txt": marchand.get("price", "") if marchand is not None else "",
             "description": texte_brut(item.findtext("description") or ""),
             "image": image.get("url") if image is not None else None,
+            "date": date_iso(item.findtext("pubDate")),
         }
 
 
-def doit_alerter(deal):
+def infos_deal(deal):
     tech = est_tech(deal["categorie"], deal["titre"])
-    if not tech and not TOUTES_CATEGORIES:
-        return None
     prix = prix_en_float(deal["prix_txt"])
     texte = f'{deal["titre"]} {deal["description"]}'
     reduction = trouver_reduction(texte, prix)
     erreur = any(m in texte.lower() for m in MOTS_ERREUR)
-    if (reduction is not None and reduction >= REDUCTION_MIN) or erreur:
-        return {"prix": prix, "reduction": reduction, "erreur": erreur, "tech": tech}
-    return None
+    alerte = (tech or TOUTES_CATEGORIES) and (
+        (reduction is not None and reduction >= REDUCTION_MIN) or erreur
+    )
+    return {"prix": prix, "reduction": reduction, "erreur": erreur, "tech": tech, "alerte": alerte}
+
+
+def doit_alerter(deal):
+    info = infos_deal(deal)
+    return info if info["alerte"] else None
+
+
+def fiche_appli(deal, info):
+    """Version compacte d'un deal pour l'appli."""
+    return {
+        "id": deal["id"],
+        "titre": deal["titre"],
+        "lien": deal["lien"],
+        "categorie": deal["categorie"],
+        "marchand": deal["marchand"],
+        "prix": deal["prix_txt"],
+        "image": deal["image"],
+        "date": deal["date"],
+        "extrait": deal["description"][:220],
+        "reduction": info["reduction"],
+        "erreur": info["erreur"],
+        "tech": info["tech"],
+        "alerte": info["alerte"],
+    }
+
+
+def charger_deals_appli():
+    try:
+        return json.loads(FICHIER_DEALS.read_text()).get("deals", [])
+    except Exception:
+        return []
+
+
+def sauver_deals_appli(deals):
+    deals.sort(key=lambda d: d.get("date", ""), reverse=True)
+    FICHIER_DEALS.parent.mkdir(parents=True, exist_ok=True)
+    FICHIER_DEALS.write_text(json.dumps({
+        "maj": datetime.now(timezone.utc).isoformat(),
+        "deals": deals[:MAX_DEALS],
+    }, ensure_ascii=False))
 
 
 def envoyer_discord(webhook, deal, info):
@@ -178,6 +231,9 @@ def main():
     vus = [] if premier_lancement else json.loads(FICHIER_VUS.read_text())
     deja = set(vus)
 
+    deals_appli = charger_deals_appli()
+    ids_appli = {d["id"] for d in deals_appli}
+
     alertes = 0
     for url in FLUX:
         try:
@@ -192,11 +248,15 @@ def main():
             deja.add(deal["id"])
             vus.append(deal["id"])
 
+            info = infos_deal(deal)
+            if deal["id"] not in ids_appli:
+                deals_appli.append(fiche_appli(deal, info))
+                ids_appli.add(deal["id"])
+
             if premier_lancement:
                 continue  # on mémorise sans spammer au 1er passage
 
-            info = doit_alerter(deal)
-            if info:
+            if info["alerte"]:
                 alertes += 1
                 print(f'ALERTE : {deal["titre"]} ({deal["prix_txt"]}, {info})')
                 if not test:
@@ -204,6 +264,7 @@ def main():
 
     if not test:
         FICHIER_VUS.write_text(json.dumps(vus[-MAX_VUS:]))
+        sauver_deals_appli(deals_appli)
     print(f"Terminé : {alertes} alerte(s)." + (" (1er lancement : deals mémorisés)" if premier_lancement else ""))
 
 

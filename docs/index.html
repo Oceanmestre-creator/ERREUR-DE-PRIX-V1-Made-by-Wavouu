@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Erreurs de prix</title>
+<meta name="description" content="Les plus grosses réductions et erreurs de prix repérées sur Dealabs.">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Erreurs prix">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f6f8; --surface:#ffffff; --surface-2:#eef0f3; --text:#14161b; --muted:#6b7280;
+  --line:#e3e5ea; --hot:#e5383b; --hot-bg:#fde8e8; --tech:#d97706; --tech-bg:#fdf1de;
+  --good:#16a34a; --good-bg:#e3f6ea; --accent:#ff5a3d;
+  --radius:16px; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1115; --surface:#181b21; --surface-2:#22262e; --text:#f1f2f4; --muted:#9aa1ad;
+    --line:#2a2f38; --hot:#ff5d5f; --hot-bg:#3a1c1e; --tech:#f5a524; --tech-bg:#3a2c12;
+    --good:#34d27b; --good-bg:#14301f; --accent:#ff6a4d;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--text);
+  font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Inter,sans-serif;
+  -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* En-tête */
+header{
+  position:sticky; top:0; z-index:10;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(1.6) blur(14px); -webkit-backdrop-filter:saturate(1.6) blur(14px);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:1px solid var(--line);
+}
+.top{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;border-radius:9px;flex:none}
+.titles{flex:1;min-width:0}
+h1{font-size:20px;letter-spacing:-.02em;margin:0;font-weight:750}
+.maj{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.maj .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:1px}
+.maj.vieux .dot{background:var(--tech)}
+.refresh{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2)}
+.refresh svg{width:18px;height:18px}
+.refresh.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Onglets */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;margin-top:12px}
+.tab{padding:8px 0;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);position:relative}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--hot);color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+.badge[hidden]{display:none}
+
+/* Filtres */
+.filtres{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filtres::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:550;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.sep{flex:none;width:1px;background:var(--line);margin:4px 2px}
+
+/* Liste */
+main{padding:8px 16px 0;max-width:720px;margin:0 auto}
+.liste{display:flex;flex-direction:column;gap:10px}
+.carte{
+  display:grid;grid-template-columns:76px 1fr;gap:12px;align-items:start;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px;box-shadow:var(--shadow);transition:transform .12s;
+}
+.carte:active{transform:scale(.985)}
+.carte.erreur{border-color:color-mix(in srgb,var(--hot) 55%,var(--line))}
+.vignette{width:76px;height:76px;border-radius:12px;background:var(--surface-2);object-fit:cover;display:block}
+.vignette.vide{display:grid;place-items:center;color:var(--muted);font-size:24px}
+.corps{min-width:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:5px}
+.tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.01em}
+.tag.erreur{background:var(--hot-bg);color:var(--hot)}
+.tag.tech{background:var(--tech-bg);color:var(--tech)}
+.tag.reduc{background:var(--good-bg);color:var(--good)}
+.tag.cat{background:var(--surface-2);color:var(--muted);font-weight:600}
+.titre{font-size:14.5px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bas{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.prix{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.marchand{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.quand{font-size:12px;color:var(--muted);white-space:nowrap}
+
+.vide-etat{text-align:center;color:var(--muted);padding:56px 24px}
+.vide-etat .ico{font-size:40px;margin-bottom:10px}
+.vide-etat strong{display:block;color:var(--text);font-size:16px;margin-bottom:4px}
+
+/* Bandeau installation + toast */
+.installer{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+.installer button{margin-left:auto;color:var(--muted);font-size:18px;line-height:1}
+.installer[hidden]{display:none}
+.toast{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,140%);
+  background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;font-weight:600;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .2s;z-index:20;max-width:calc(100% - 32px);
+  opacity:0;pointer-events:none
+}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.footer{color:var(--muted);font-size:12px;text-align:center;padding:24px 16px 8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <img class="logo" src="icons/icon-192.png" alt="">
+    <div class="titles">
+      <h1>Erreurs de prix</h1>
+      <div class="maj" id="maj">Chargement…</div>
+    </div>
+    <button class="refresh" id="refresh" aria-label="Actualiser">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-vue="alertes" aria-selected="true">Alertes<span class="badge" id="badge" hidden></span></button>
+    <button class="tab" role="tab" data-vue="tous" aria-selected="false">Tous les deals</button>
+  </div>
+</header>
+
+<div class="installer" id="installer" hidden>
+  <span>📲</span>
+  <span id="installer-txt"></span>
+  <button id="installer-x" aria-label="Fermer">×</button>
+</div>
+
+<nav class="filtres" id="filtres" aria-label="Filtres"></nav>
+
+<main>
+  <div class="liste" id="liste"></div>
+  <div class="footer">Source : Dealabs • vérifié toutes les ~10 min</div>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const SOURCES = [
+  "https://raw.githubusercontent.com/Oceanmestre-creator/ERREUR-DE-PRIX-V1-Made-by-Wavouu/main/docs/deals.json",
+  "deals.json",
+];
+const ACTUALISATION_MS = 2 * 60 * 1000;
+
+const etat = {
+  vue: lire("vue", "alertes"),
+  filtre: lire("filtre", "tout"),   // tout | tech | erreur | 50 | 70 | 90 | cat:<nom>
+  donnees: null,
+};
+
+function lire(cle, defaut) { try { return localStorage.getItem("edp:" + cle) ?? defaut; } catch { return defaut; } }
+function ecrire(cle, val) { try { localStorage.setItem("edp:" + cle, val); } catch {} }
+
+const $ = (id) => document.getElementById(id);
+const echap = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function ilYa(iso) {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (!isFinite(s)) return "";
+  if (s < 60) return "à l'instant";
+  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`;
+  return `il y a ${Math.floor(s / 86400)} j`;
+}
+
+async function charger(manuel) {
+  $("refresh").classList.add("spin");
+  let ok = false;
+  for (const url of SOURCES) {
+    try {
+      const sep = url.includes("?") ? "&" : "?";
+      const r = await fetch(url + sep + "t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (!Array.isArray(data.deals)) continue;
+      nouveautes(data);
+      etat.donnees = data;
+      try { localStorage.setItem("edp:cache", JSON.stringify(data)); } catch {}
+      ok = true;
+      break;
+    } catch {}
+  }
+  $("refresh").classList.remove("spin");
+  if (!ok && !etat.donnees) {
+    try { etat.donnees = JSON.parse(localStorage.getItem("edp:cache")); } catch {}
+  }
+  if (!ok && manuel) toast("Pas de connexion, affichage de la dernière liste");
+  rendre();
+}
+
+/* Repère les nouvelles alertes depuis la dernière ouverture */
+function nouveautes(data) {
+  const alertes = data.deals.filter((d) => d.alerte);
+  let vus = new Set(), premiereFois = true;
+  try {
+    const brut = localStorage.getItem("edp:alertes-vues");
+    premiereFois = brut === null;
+    vus = new Set(JSON.parse(brut || "[]"));
+  } catch {}
+  const nouvelles = premiereFois ? [] : alertes.filter((d) => !vus.has(d.id));
+  if (premiereFois) marquerVues(alertes);
+  etat.nouvelles = new Set(nouvelles.map((d) => d.id));
+  const n = nouvelles.length;
+  $("badge").hidden = n === 0;
+  $("badge").textContent = n;
+  if ("setAppBadge" in navigator) { n ? navigator.setAppBadge(n).catch(() => {}) : navigator.clearAppBadge?.().catch(() => {}); }
+  if (n && etat.donnees) {
+    toast(n === 1 ? "🚨 1 nouvelle alerte" : `🚨 ${n} nouvelles alertes`);
+    if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  }
+}
+function marquerVues(alertes) {
+  try { localStorage.setItem("edp:alertes-vues", JSON.stringify(alertes.map((d) => d.id).slice(0, 500))); } catch {}
+}
+
+function filtrer(deals) {
+  let liste = etat.vue === "alertes" ? deals.filter((d) => d.alerte) : deals;
+  const f = etat.filtre;
+  if (f === "tech") liste = liste.filter((d) => d.tech);
+  else if (f === "erreur") liste = liste.filter((d) => d.erreur);
+  else if (/^\d+$/.test(f)) liste = liste.filter((d) => (d.reduction || 0) >= +f);
+  else if (f.startsWith("cat:")) liste = liste.filter((d) => d.categorie === f.slice(4));
+  return liste;
+}
+
+function rendreFiltres(deals) {
+  const cats = [...new Set(deals.map((d) => d.categorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr"));
+  const options = [
+    ["tout", "Tout"], ["erreur", "🚨 Erreurs"], ["tech", "🔥 Tech"],
+    ["50", "-50 %+"], ["70", "-70 %+"], ["90", "-90 %+"], null,
+    ...cats.map((c) => ["cat:" + c, c]),
+  ];
+  if (!options.some((o) => o && o[0] === etat.filtre)) etat.filtre = "tout";
+  $("filtres").innerHTML = options.map((o) => o === null ? '<span class="sep"></span>' :
+    `<button class="chip" data-f="${echap(o[0])}" aria-pressed="${o[0] === etat.filtre}">${echap(o[1])}</button>`).join("");
+}
+
+function carte(d) {
+  const tags = [];
+  if (d.erreur) tags.push('<span class="tag erreur">ERREUR DE PRIX ?</span>');
+  if (d.reduction) tags.push(`<span class="tag reduc">-${d.reduction} %</span>`);
+  if (d.tech) tags.push('<span class="tag tech">TECH</span>');
+  if (d.categorie) tags.push(`<span class="tag cat">${echap(d.categorie)}</span>`);
+  if (etat.nouvelles?.has(d.id)) tags.unshift('<span class="tag erreur">NOUVEAU</span>');
+  const img = d.image
+    ? `<img class="vignette" src="${echap(d.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;vignette vide&quot;>🏷️</div>'">`
+    : '<div class="vignette vide">🏷️</div>';
+  return `<a class="carte${d.erreur ? " erreur" : ""}" href="${echap(d.lien)}" target="_blank" rel="noopener">
+    ${img}
+    <div class="corps">
+      <div class="tags">${tags.join("")}</div>
+      <div class="titre">${echap(d.titre)}</div>
+      <div class="bas">
+        ${d.prix ? `<span class="prix">${echap(d.prix)}</span>` : ""}
+        <span class="marchand">${echap(d.marchand)}</span>
+        <span class="quand">${ilYa(d.date)}</span>
+      </div>
+    </div>
+  </a>`;
+}
+
+function rendre() {
+  document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", t.dataset.vue === etat.vue));
+  const data = etat.donnees;
+  if (!data) {
+    $("maj").textContent = "Impossible de charger les deals";
+    $("liste").innerHTML = '<div class="vide-etat"><div class="ico">📡</div><strong>Pas de données</strong>Vérifie ta connexion puis actualise.</div>';
+    return;
+  }
+  const age = (Date.now() - new Date(data.maj).getTime()) / 60000;
+  $("maj").className = "maj" + (age > 60 ? " vieux" : "");
+  $("maj").innerHTML = `<span class="dot"></span>Robot vérifié ${ilYa(data.maj)} • ${data.deals.filter((d) => d.alerte).length} alertes`;
+  rendreFiltres(data.deals);
+  const liste = filtrer(data.deals);
+  if (!liste.length) {
+    const msg = etat.vue === "alertes" && etat.filtre === "tout"
+      ? "<strong>Aucune alerte pour l'instant</strong>Les deals à -70 % ou les erreurs de prix apparaîtront ici. Le robot vérifie toutes les ~10 min."
+      : "<strong>Rien avec ce filtre</strong>Essaie un autre filtre ou l'onglet « Tous les deals ».";
+    $("liste").innerHTML = `<div class="vide-etat"><div class="ico">🔎</div>${msg}</div>`;
+  } else {
+    $("liste").innerHTML = liste.map(carte).join("");
+  }
+  if (etat.vue === "alertes" && etat.nouvelles?.size) {
+    marquerVues(data.deals.filter((d) => d.alerte));
+    setTimeout(() => { $("badge").hidden = true; navigator.clearAppBadge?.().catch(() => {}); }, 1500);
+  }
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+/* Interactions */
+document.querySelector(".tabs").addEventListener("click", (e) => {
+  const t = e.target.closest(".tab"); if (!t) return;
+  etat.vue = t.dataset.vue; ecrire("vue", etat.vue); rendre(); window.scrollTo({ top: 0 });
+});
+$("filtres").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  etat.filtre = c.dataset.f; ecrire("filtre", etat.filtre); rendre();
+});
+$("refresh").addEventListener("click", () => charger(true));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) charger(); });
+setInterval(() => { if (!document.hidden) charger(); }, ACTUALISATION_MS);
+setInterval(() => { if (etat.donnees) rendre(); }, 60 * 1000);
+
+/* Bandeau "installer l'appli" */
+(function () {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone || lire("installer-ferme", "") === "1") return;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("installer-txt").innerHTML = ios
+    ? "Installe l'appli : touche <b>Partager</b> puis <b>Sur l'écran d'accueil</b>."
+    : "Installe l'appli : menu <b>⋮</b> du navigateur puis <b>Installer l'application</b>.";
+  $("installer").hidden = false;
+  $("installer-x").onclick = () => { $("installer").hidden = true; ecrire("installer-ferme", "1"); };
+})();
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+try { etat.donnees = JSON.parse(localStorage.getItem("edp:cache")); if (etat.donnees) rendre(); } catch {}
+charger();
+</script>
+</body>
+</html>

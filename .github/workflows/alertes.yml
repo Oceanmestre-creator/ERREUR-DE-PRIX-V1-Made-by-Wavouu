@@ -32,6 +32,6 @@ jobs:
         run: |
           git config user.name "alertes-bot"
           git config user.email "alertes-bot@users.noreply.github.com"
-          git add deja_vus.json
-          git diff --cached --quiet || git commit -m "maj deals vus [skip ci]"
+          git add deja_vus.json docs/deals.json
+          git diff --cached --quiet || git commit -m "maj deals [skip ci]"
           git push

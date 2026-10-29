@@ -6,6 +6,17 @@ Surveille les nouveaux deals Dealabs toutes les 10 minutes et t'envoie une alert
 
 100 % gratuit : tourne sur GitHub Actions, rien à laisser allumé.
 
+## L'appli
+
+Une appli web (dossier `docs/`) affiche les alertes et les 300 derniers deals, avec des filtres (erreurs, tech, -50/-70/-90 %, catégories).
+Elle est publiée par GitHub Pages : https://oceanmestre-creator.github.io/ERREUR-DE-PRIX-V1-Made-by-Wavouu/
+
+Pour l'installer sur ton téléphone :
+- **iPhone** : ouvre le lien dans Safari → Partager → « Sur l'écran d'accueil » ;
+- **Android** : ouvre le lien dans Chrome → menu ⋮ → « Installer l'application ».
+
+Les notifications instantanées restent celles de Discord. L'appli affiche un badge et une alerte quand de nouveaux deals sont arrivés depuis ta dernière visite.
+
 ## Installation (faisable depuis le téléphone, sur github.com)
 
 1. **Crée un dépôt public** : github.com → « + » → New repository → nom `alertes-erreurs-de-prix` → **Public** → Create.
